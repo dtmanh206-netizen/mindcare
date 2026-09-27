@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>MindCare - AI chăm sóc tinh thần</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                💚
+            </div>
+
+            <div>
+                <h1>MindCare</h1>
+                <span>AI đồng hành cùng bạn</span>
+            </div>
+
+        </div>
+
+
+        <nav class="nav">
+
+            <button
+                class="nav-item active"
+                data-page="home"
+            >
+                🏠
+                <span>Trang chủ</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="chat"
+            >
+                💬
+                <span>Trò chuyện</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="journal"
+            >
+                📔
+                <span>Nhật ký</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="stats"
+            >
+                📊
+                <span>Thống kê</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="relax"
+            >
+                🌿
+                <span>Thư giãn</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-page="settings"
+            >
+                ⚙️
+                <span>Cài đặt</span>
+            </button>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div
+                id="accountBox"
+                class="account-box"
+            >
+
+                <div class="account-avatar">
+                    👤
+                </div>
+
+                <div class="account-info">
+
+                    <strong id="accountName">
+                        Khách
+                    </strong>
+
+                    <small id="accountEmail">
+                        Chưa đăng nhập
+                    </small>
+
+                </div>
+
+            </div>
+
+            <a
+                id="loginButton"
+                href="/login"
+                class="account-action"
+            >
+                🔐 Đăng nhập
+            </a>
+
+            <a
+                id="logoutButton"
+                href="/logout"
+                class="account-action logout hidden"
+            >
+                🚪 Đăng xuất
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <h2 id="pageTitle">
+                    Trang chủ
+                </h2>
+
+                <p id="pageSubtitle">
+                    Một không gian nhỏ để bạn chăm sóc chính mình.
+                </p>
+
+            </div>
+
+            <div class="top-status">
+                <span class="status-dot"></span>
+                MindCare đang hoạt động
+            </div>
+
+        </header>
+
+
+        <!-- HOME -->
+
+        <section
+            id="page-home"
+            class="page active"
+        >
+
+            <div class="hero">
+
+                <div class="hero-content">
+
+                    <span class="hero-tag">
+                        🌱 Không gian an toàn
+                    </span>
+
+                    <h1>
+                        Chào bạn,
+                        <span id="heroName">
+                            bạn
+                        </span>
+                        👋
+                    </h1>
+
+                    <p>
+                        Hôm nay bạn không cần phải tự mình
+                        xử lý mọi thứ. MindCare luôn sẵn sàng
+                        lắng nghe bạn.
+                    </p>
+
+                    <button
+                        class="primary-btn"
+                        onclick="goToPage('chat')"
+                    >
+                        💬 Trò chuyện với MindCare
+                    </button>
+
+                </div>
+
+                <div class="hero-illustration">
+                    🌿
+                </div>
+
+            </div>
+
+
+            <!-- MOOD -->
+
+            <div class="card mood-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <span class="mini-label">
+                            CHECK-IN
+                        </span>
+
+                        <h3>
+                            Hôm nay bạn cảm thấy thế nào?
+                        </h3>
+
+                        <p>
+                            Đây chỉ là một gợi ý nhỏ.
+                            Bạn có thể bỏ qua nếu chưa muốn chia sẻ.
+                        </p>
+
+                    </div>
+
+                    <button
+                        class="close-mood"
+                        onclick="closeMood()"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="mood-list">
+
+                    <button
+                        onclick="selectMood('😊 Vui vẻ')"
+                    >
+                        <span>😊</span>
+                        Vui vẻ
+                    </button>
+
+                    <button
+                        onclick="selectMood('😐 Bình thường')"
+                    >
+                        <span>😐</span>
+                        Bình thường
+                    </button>
+
+                    <button
+                        onclick="selectMood('😔 Buồn')"
+                    >
+                        <span>😔</span>
+                        Buồn
+                    </button>
+
+                    <button
+                        onclick="selectMood('😰 Lo lắng')"
+                    >
+                        <span>😰</span>
+                        Lo lắng
+                    </button>
+
+                    <button
+                        onclick="selectMood('😣 Căng thẳng')"
+                    >
+                        <span>😣</span>
+                        Căng thẳng
+                    </button>
+
+                    <button
+                        onclick="selectMood('😴 Mệt mỏi')"
+                    >
+                        <span>😴</span>
+                        Mệt mỏi
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-grid">
+
+                <div
+                    class="quick-card"
+                    onclick="goToPage('chat')"
+                >
+
+                    <div class="quick-icon green">
+                        💬
+                    </div>
+
+                    <h3>
+                        Trò chuyện
+                    </h3>
+
+                    <p>
+                        Chia sẻ những điều đang khiến
+                        bạn suy nghĩ.
+                    </p>
+
+                    <span>
+                        Bắt đầu →
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="quick-card"
+                    onclick="goToPage('journal')"
+                >
+
+                    <div class="quick-icon purple">
+                        📔
+                    </div>
+
+                    <h3>
+                        Nhật ký
+                    </h3>
+
+                    <p>
+                        Viết lại cảm xúc và những điều
+                        bạn muốn lưu giữ.
+                    </p>
+
+                    <span>
+                        Viết nhật ký →
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="quick-card"
+                    onclick="goToPage('relax')"
+                >
+
+                    <div class="quick-icon blue">
+                        🌿
+                    </div>
+
+                    <h3>
+                        Thư giãn
+                    </h3>
+
+                    <p>
+                        Một vài hoạt động nhỏ giúp
+                        bạn chậm lại.
+                    </p>
+
+                    <span>
+                        Khám phá →
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CHAT -->
+
+        <section
+            id="page-chat"
+            class="page"
+        >
+
+            <div class="chat-wrapper">
+
+                <div
+                    id="chatBox"
+                    class="chat-box"
+                >
+
+                    <div class="message bot">
+
+                        <div class="avatar">
+                            💚
+                        </div>
+
+                        <div class="bubble">
+
+                            <strong>
+                                Chào bạn 🌱
+                            </strong>
+
+                            <p>
+                                Bạn có thể kể cho mình nghe
+                                hôm nay bạn đang cảm thấy
+                                như thế nào.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chat-input-area">
+
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="Chia sẻ điều bạn đang suy nghĩ..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        onclick="sendMessage()"
+                        id="sendButton"
+                    >
+                        Gửi
+                    </button>
+
+                </div>
+
+                <div class="chat-note">
+                    💚 MindCare cung cấp hỗ trợ tham khảo,
+                    không thay thế chuyên gia tâm lý hoặc bác sĩ.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- JOURNAL -->
+
+        <section
+            id="page-journal"
+            class="page"
+        >
+
+            <div class="section-header">
+
+                <div>
+                    <h2>
+                        Nhật ký của bạn
+                    </h2>
+
+                    <p>
+                        Viết ra để lòng nhẹ hơn.
+                    </p>
+                </div>
+
+                <button
+                    class="primary-btn"
+                    onclick="openJournalModal()"
+                >
+                    + Viết nhật ký
+                </button>
+
+            </div>
+
+
+            <div
+                id="journalList"
+                class="journal-list"
+            >
+
+                <div class="empty-state">
+                    <div>📔</div>
+                    <h3>
+                        Chưa có nhật ký
+                    </h3>
+                    <p>
+                        Hãy viết lại những điều bạn
+                        đang cảm thấy hôm nay.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- STATS -->
+
+        <section
+            id="page-stats"
+            class="page"
+        >
+
+            <div class="section-header">
+
+                <div>
+                    <h2>
+                        Thống kê của bạn
+                    </h2>
+
+                    <p>
+                        Theo dõi quá trình chăm sóc bản thân.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        😊
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Check-in cảm xúc
+                        </span>
+
+                        <strong id="statMood">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        📔
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Nhật ký
+                        </span>
+
+                        <strong id="statJournal">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        💬
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Cuộc trò chuyện
+                        </span>
+
+                        <strong id="statChat">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card insight-card">
+
+                <span class="mini-label">
+                    GỢI Ý
+                </span>
+
+                <h3>
+                    Chăm sóc bản thân mỗi ngày 🌱
+                </h3>
+
+                <p>
+                    Bạn không cần phải thay đổi mọi thứ
+                    cùng một lúc. Một hành động nhỏ mỗi ngày
+                    cũng là một bước tiến.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- RELAX -->
+
+        <section
+            id="page-relax"
+            class="page"
+        >
+
+            <div class="section-header">
+
+                <div>
+                    <h2>
+                        Không gian thư giãn 🌿
+                    </h2>
+
+                    <p>
+                        Dành vài phút để cơ thể và tâm trí
+                        được nghỉ ngơi.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="relax-grid">
+
+                <div class="relax-card">
+
+                    <div class="relax-icon">
+                        🌬️
+                    </div>
+
+                    <h3>
+                        Hít thở 4–4
+                    </h3>
+
+                    <p>
+                        Hít vào 4 giây, giữ 4 giây,
+                        rồi thở ra thật chậm.
+                    </p>
+
+                    <button
+                        onclick="startBreathing()"
+                        class="secondary-btn"
+                    >
+                        Bắt đầu
+                    </button>
+
+                </div>
+
+
+                <div class="relax-card">
+
+                    <div class="relax-icon">
+                        🧘
+                    </div>
+
+                    <h3>
+                        Nghỉ một phút
+                    </h3>
+
+                    <p>
+                        Đặt điện thoại xuống, thả lỏng
+                        vai và nhắm mắt một lúc.
+                    </p>
+
+                    <button
+                        onclick="oneMinuteRelax()"
+                        class="secondary-btn"
+                    >
+                        Bắt đầu
+                    </button>
+
+                </div>
+
+
+                <div class="relax-card">
+
+                    <div class="relax-icon">
+                        ☀️
+                    </div>
+
+                    <h3>
+                        Nhắc nhở tích cực
+                    </h3>
+
+                    <p id="positiveQuote">
+                        Bạn đang cố gắng và điều đó
+                        đã rất đáng trân trọng.
+                    </p>
+
+                    <button
+                        onclick="newQuote()"
+                        class="secondary-btn"
+                    >
+                        Một câu khác
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="relaxTimer"
+                class="relax-timer hidden"
+            >
+
+                <div
+                    id="timerNumber"
+                    class="timer-number"
+                >
+                    60
+                </div>
+
+                <p>
+                    Hãy hít thở chậm và thư giãn...
+                </p>
+
+                <button
+                    class="secondary-btn"
+                    onclick="stopTimer()"
+                >
+                    Dừng
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- SETTINGS -->
+
+        <section
+            id="page-settings"
+            class="page"
+        >
+
+            <div class="section-header">
+
+                <div>
+                    <h2>
+                        Cài đặt
+                    </h2>
+
+                    <p>
+                        Tùy chỉnh trải nghiệm MindCare.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="settings-list">
+
+                <div class="setting-item">
+
+                    <div>
+
+                        <strong>
+                            Thông tin tài khoản
+                        </strong>
+
+                        <p id="settingsUser">
+                            Chưa đăng nhập
+                        </p>
+
+                    </div>
+
+                    <a
+                        href="/login"
+                        class="secondary-btn"
+                        id="settingsLogin"
+                    >
+                        Đăng nhập
+                    </a>
+
+                </div>
+
+
+                <div class="setting-item">
+
+                    <div>
+
+                        <strong>
+                            Giao diện
+                        </strong>
+
+                        <p>
+                            MindCare sử dụng giao diện
+                            nhẹ nhàng để tạo cảm giác thư giãn.
+                        </p>
+
+                    </div>
+
+                    <button
+                        class="secondary-btn"
+                        onclick="toggleTheme()"
+                    >
+                        🌙 Đổi giao diện
+                    </button>
+
+                </div>
+
+
+                <div class="setting-item">
+
+                    <div>
+
+                        <strong>
+                            An toàn sức khỏe
+                        </strong>
+
+                        <p>
+                            MindCare không thay thế bác sĩ
+                            hoặc chuyên gia tâm lý.
+                        </p>
+
+                    </div>
+
+                    <span class="safe-badge">
+                        ✓ Đã bật
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- JOURNAL MODAL -->
+
+<div
+    id="journalModal"
+    class="modal hidden"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <h2>
+                    Viết nhật ký 📔
+                </h2>
+
+                <p>
+                    Hãy viết thật tự nhiên.
+                </p>
+            </div>
+
+            <button
+                onclick="closeJournalModal()"
+                class="modal-close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <input
+            type="text"
+            id="journalTitle"
+            placeholder="Tiêu đề..."
+        >
+
+
+        <textarea
+            id="journalContent"
+            placeholder="Hôm nay bạn muốn viết điều gì?"
+        ></textarea>
+
+
+        <select id="journalMood">
+
+            <option value="">
+                Chọn cảm xúc
+            </option>
+
+            <option>
+                😊 Vui vẻ
+            </option>
+
+            <option>
+                😐 Bình thường
+            </option>
+
+            <option>
+                😔 Buồn
+            </option>
+
+            <option>
+                😰 Lo lắng
+            </option>
+
+            <option>
+                😣 Căng thẳng
+            </option>
+
+            <option>
+                😴 Mệt mỏi
+            </option>
+
+        </select>
+
+
+        <button
+            class="primary-btn full"
+            onclick="saveJournal()"
+        >
+            💾 Lưu nhật ký
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+<script
+    src="{{ url_for('static', filename='script.js') }}"
+></script>
+
+</body>
+
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Đăng nhập - MindCare</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(
+                135deg,
+                #e8f8f2,
+                #f8fcfa
+            );
+        }
+
+        .auth-box {
+            width: 420px;
+            max-width: calc(100% - 30px);
+            background: white;
+            border: 1px solid #e1eee9;
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 60px rgba(40, 100, 80, .12);
+        }
+
+        .auth-logo {
+            text-align: center;
+            font-size: 42px;
+        }
+
+        .auth-box h1 {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: #7d8b91;
+            font-size: 13px;
+            margin: 8px 0 25px;
+        }
+
+        .auth-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 14px 0 7px;
+        }
+
+        .auth-box input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #dfece7;
+            border-radius: 12px;
+            outline: none;
+        }
+
+        .auth-box input:focus {
+            border-color: #49b99b;
+        }
+
+        .auth-btn {
+            width: 100%;
+            border: 0;
+            background: #49b99b;
+            color: white;
+            padding: 13px;
+            border-radius: 12px;
+            font-weight: 700;
+            margin-top: 22px;
+            cursor: pointer;
+        }
+
+        .auth-btn:hover {
+            background: #269879;
+        }
+
+        .error {
+            background: #fff1f1;
+            color: #c65353;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #7d8b91;
+        }
+
+        .auth-link a {
+            color: #269879;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .home-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #7d8b91;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="auth-box">
+
+    <div class="auth-logo">
+        💚
+    </div>
+
+    <h1>
+        Chào mừng trở lại
+    </h1>
+
+    <p class="auth-subtitle">
+        Đăng nhập vào không gian MindCare của bạn.
+    </p>
+
+
+    {% if error %}
+
+        <div class="error">
+            {{ error }}
+        </div>
+
+    {% endif %}
+
+
+    <form
+        method="POST"
+        action="/login"
+    >
+
+        <label>
+            Email
+        </label>
+
+        <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+        >
+
+
+        <label>
+            Mật khẩu
+        </label>
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Nhập mật khẩu"
+            required
+        >
+
+
+        <button
+            type="submit"
+            class="auth-btn"
+        >
+            Đăng nhập
+        </button>
+
+    </form>
+
+
+    <div class="auth-link">
+
+        Chưa có tài khoản?
+
+        <a href="/register">
+            Đăng ký ngay
+        </a>
+
+    </div>
+
+
+    <a
+        href="/"
+        class="home-link"
+    >
+        ← Quay lại MindCare
+    </a>
+
+</div>
+
+</body>
+
+</html>
