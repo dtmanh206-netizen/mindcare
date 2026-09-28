@@ -1,4 +1,3 @@
-```python
 from flask import (
     Flask,
     render_template,
@@ -50,7 +49,7 @@ DATABASE = "mindcare.db"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
-    print("WARNING: Chưa tìm thấy GEMINI_API_KEY trong biến môi trường.")
+    print("WARNING: Chưa tìm thấy GEMINI_API_KEY.")
 
 client = genai.Client(
     api_key=GEMINI_API_KEY
@@ -71,8 +70,13 @@ login_manager.login_view = "login"
 # ============================================================
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(
+        DATABASE,
+        timeout=10
+    )
+
     conn.row_factory = sqlite3.Row
+
     return conn
 
 
@@ -191,7 +195,10 @@ def home():
 # REGISTER
 # ============================================================
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route(
+    "/register",
+    methods=["GET", "POST"]
+)
 def register():
 
     if current_user.is_authenticated:
@@ -255,7 +262,11 @@ def register():
         conn.execute(
             """
             INSERT INTO users
-            (name, email, password)
+            (
+                name,
+                email,
+                password
+            )
             VALUES (?, ?, ?)
             """,
             (
@@ -268,16 +279,23 @@ def register():
         conn.commit()
         conn.close()
 
-        return redirect(url_for("login"))
+        return redirect(
+            url_for("login")
+        )
 
-    return render_template("register.html")
+    return render_template(
+        "register.html"
+    )
 
 
 # ============================================================
 # LOGIN
 # ============================================================
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
 def login():
 
     if current_user.is_authenticated:
@@ -322,14 +340,18 @@ def login():
 
             login_user(user_object)
 
-            return redirect(url_for("home"))
+            return redirect(
+                url_for("home")
+            )
 
         return render_template(
             "login.html",
             error="Email hoặc mật khẩu không đúng."
         )
 
-    return render_template("login.html")
+    return render_template(
+        "login.html"
+    )
 
 
 # ============================================================
@@ -342,7 +364,9 @@ def logout():
 
     logout_user()
 
-    return redirect(url_for("home"))
+    return redirect(
+        url_for("home")
+    )
 
 
 # ============================================================
@@ -359,132 +383,229 @@ def get_current_user():
         })
 
     return jsonify({
+
         "logged_in": True,
+
         "user": {
             "id": current_user.id,
             "name": current_user.name,
             "email": current_user.email
         }
+
     })
 
 
 # ============================================================
-# AI PROMPT
+# MINDCARE AI PROMPT
 # ============================================================
 
 def build_mindcare_prompt(message):
 
     return f"""
-Bạn là MindCare – một trợ lý AI hỗ trợ sức khỏe tinh thần
-dành cho sinh viên Việt Nam.
+Bạn là MindCare, một trợ lý AI hỗ trợ sức khỏe tinh thần
+dành riêng cho sinh viên Việt Nam.
 
-Nhiệm vụ của bạn:
+MỤC TIÊU:
 
-- Lắng nghe người dùng một cách nhẹ nhàng.
-- Không phán xét.
-- Không chẩn đoán bệnh.
-- Không tự nhận mình là bác sĩ hoặc chuyên gia.
-- Giúp người dùng nhận diện cảm xúc.
-- Đưa ra những gợi ý đơn giản, an toàn và thực tế.
-- Có thể gợi ý nghỉ ngơi, hít thở, vận động nhẹ,
-  ngủ đủ, viết nhật ký hoặc chia sẻ với người đáng tin cậy.
-- Nếu vấn đề kéo dài và ảnh hưởng rõ tới học tập,
-  giấc ngủ hoặc cuộc sống, khuyến khích tìm chuyên gia
-  tâm lý hoặc nhân viên y tế.
-- Nếu người dùng nói về tự làm hại bản thân,
-  tự sát hoặc nguy hiểm ngay lập tức:
-  ưu tiên an toàn, khuyến khích họ không ở một mình,
-  liên hệ ngay người đáng tin cậy ở gần và tìm hỗ trợ
-  y tế khẩn cấp khi cần.
-- Tuyệt đối không cung cấp hướng dẫn tự làm hại bản thân.
-- Trả lời bằng tiếng Việt.
-- Trả lời tự nhiên, không quá dài.
-- Khoảng 2–5 đoạn ngắn.
-- Có thể dùng emoji vừa phải.
+Giúp sinh viên cảm thấy được lắng nghe, hiểu cảm xúc
+và tìm được một bước nhỏ, an toàn để cải thiện tình trạng
+hiện tại.
 
-Tin nhắn của người dùng:
+CÁC CHỦ ĐỀ MINDCARE HỖ TRỢ:
+
+- Stress và áp lực học tập
+- Áp lực thi cử
+- Lo âu
+- Buồn bã
+- Mất động lực
+- Cô đơn
+- Khó ngủ do căng thẳng
+- Áp lực gia đình
+- Vấn đề tình cảm
+- Mâu thuẫn bạn bè
+- Khó khăn trong cuộc sống sinh viên
+- Cảm xúc tiêu cực
+
+NGUYÊN TẮC TRẢ LỜI:
+
+1. Lắng nghe trước khi đưa lời khuyên.
+
+2. Thể hiện sự đồng cảm nhưng không phán xét.
+
+3. Không chẩn đoán bệnh tâm lý.
+
+4. Không tự nhận là bác sĩ hoặc nhà trị liệu.
+
+5. Không khẳng định người dùng mắc một căn bệnh nào.
+
+6. Không đưa ra lời khuyên nguy hiểm.
+
+7. Không làm người dùng cảm thấy có lỗi vì cảm xúc của họ.
+
+8. Không trả lời quá dài.
+
+9. Ưu tiên những hành động nhỏ và thực tế.
+
+10. Nếu phù hợp, hỏi một câu ngắn để hiểu người dùng hơn.
+
+CÁCH TRẢ LỜI:
+
+Thông thường hãy trả lời theo cấu trúc:
+
+- Một câu thể hiện rằng bạn đã hiểu cảm xúc của người dùng.
+- Giải thích ngắn gọn điều có thể đang khiến họ cảm thấy như vậy.
+- Đưa ra 1–3 gợi ý thực tế.
+- Nếu cần, kết thúc bằng một câu hỏi nhẹ nhàng.
+
+Ví dụ:
+
+"Mình hiểu cảm giác đó. Khi phải chịu quá nhiều áp lực
+cùng lúc, đầu óc rất dễ rơi vào trạng thái quá tải.
+
+Trước mắt bạn có thể thử:
+• Tạm nghỉ 5 phút.
+• Viết ra 1 việc quan trọng nhất cần làm hôm nay.
+• Sau đó chỉ tập trung vào việc đó thay vì nghĩ đến
+toàn bộ mọi thứ cùng lúc.
+
+Điều khiến bạn áp lực nhất lúc này là chuyện học,
+gia đình hay một vấn đề khác?"
+
+QUY TẮC VỀ NGUY HIỂM:
+
+Nếu người dùng nói về tự sát, tự làm hại bản thân,
+muốn chết hoặc đang gặp nguy hiểm ngay lập tức:
+
+- Ưu tiên sự an toàn.
+- Khuyến khích họ không ở một mình.
+- Khuyến khích liên hệ ngay với người đáng tin cậy
+  đang ở gần.
+- Khuyến khích tìm dịch vụ y tế/cấp cứu hoặc hỗ trợ
+  khẩn cấp tại nơi họ đang ở.
+- Không cung cấp phương pháp hoặc hướng dẫn tự làm hại.
+- Không tranh luận hoặc trách móc người dùng.
+
+Nếu người dùng có vấn đề kéo dài hoặc ảnh hưởng đáng kể
+đến học tập, giấc ngủ hoặc cuộc sống, hãy nhẹ nhàng
+khuyến khích họ tìm chuyên gia tâm lý hoặc nhân viên y tế.
+
+PHONG CÁCH:
+
+- Tiếng Việt tự nhiên.
+- Gần gũi với sinh viên.
+- Ấm áp.
+- Ngắn gọn.
+- Không dùng văn phong quá máy móc.
+- Có thể sử dụng emoji vừa phải.
+- Không gọi người dùng là "bệnh nhân".
+
+TIN NHẮN CỦA NGƯỜI DÙNG:
 
 {message}
 """
 
 
 # ============================================================
-# GEMINI AI
+# GEMINI STREAMING
 # ============================================================
 
-def generate_ai_response(prompt):
+def stream_ai_response(prompt):
 
     """
-    Gọi Gemini với cơ chế retry cho các lỗi tạm thời
-    như 503 / 429 / 500.
+    Gọi Gemini theo dạng streaming thật.
+
+    Gemini trả dữ liệu đến đâu,
+    MindCare gửi đến trình duyệt đến đó.
     """
 
-    max_attempts = 3
+    try:
 
-    for attempt in range(max_attempts):
+        response_stream = client.models.generate_content_stream(
+            model="gemini-3.5-flash",
+            contents=prompt
+        )
 
-        try:
-
-            response = client.models.generate_content(
-                model="gemini-3.5-flash",
-                contents=prompt
-            )
+        for chunk in response_stream:
 
             text = getattr(
-                response,
+                chunk,
                 "text",
                 None
             )
 
             if text:
-                return text.strip()
 
-            return ""
+                yield text
 
-        except Exception as e:
+        return
 
-            error_text = str(e)
+    except Exception as e:
 
-            print(
-                f"GEMINI ERROR - attempt {attempt + 1}/{max_attempts}:",
-                error_text
+        error_text = str(e)
+
+        print(
+            "GEMINI STREAM ERROR:",
+            error_text
+        )
+
+        # Retry tối đa 1 lần đối với lỗi tạm thời.
+        retryable = any(
+            code in error_text
+            for code in [
+                "503",
+                "UNAVAILABLE",
+                "429",
+                "RESOURCE_EXHAUSTED",
+                "500",
+                "INTERNAL"
+            ]
+        )
+
+        if not retryable:
+            return
+
+        print(
+            "Gemini đang bận. Thử lại sau 1 giây..."
+        )
+
+        time.sleep(1)
+
+        try:
+
+            response_stream = client.models.generate_content_stream(
+                model="gemini-3.5-flash",
+                contents=prompt
             )
 
-            # Các lỗi có khả năng thử lại
-            retryable = any(
-                code in error_text
-                for code in [
-                    "503",
-                    "UNAVAILABLE",
-                    "429",
-                    "RESOURCE_EXHAUSTED",
-                    "500",
-                    "INTERNAL"
-                ]
-            )
+            for chunk in response_stream:
 
-            if not retryable:
-                break
-
-            if attempt < max_attempts - 1:
-
-                # 2 giây -> 4 giây
-                wait_time = 2 ** (attempt + 1)
-
-                print(
-                    f"Gemini đang bận. Thử lại sau {wait_time} giây..."
+                text = getattr(
+                    chunk,
+                    "text",
+                    None
                 )
 
-                time.sleep(wait_time)
+                if text:
+                    yield text
 
-    return None
+        except Exception as retry_error:
+
+            print(
+                "GEMINI RETRY ERROR:",
+                retry_error
+            )
+
+            return
 
 
 # ============================================================
 # CHAT AI
 # ============================================================
 
-@app.route("/chat", methods=["POST"])
+@app.route(
+    "/chat",
+    methods=["POST"]
+)
 def chat():
 
     data = request.get_json(
@@ -498,47 +619,46 @@ def chat():
 
     if not message:
 
-        return jsonify({
-            "reply": "Bạn hãy chia sẻ điều bạn đang cảm thấy nhé 💚"
-        })
+        return Response(
+            "Bạn hãy chia sẻ điều bạn đang cảm thấy nhé 💚",
+            mimetype="text/plain; charset=utf-8"
+        )
 
-    prompt = build_mindcare_prompt(message)
+    prompt = build_mindcare_prompt(
+        message
+    )
 
     def generate():
 
+        full_reply = ""
+
         try:
 
-            full_reply = generate_ai_response(
+            for chunk in stream_ai_response(
                 prompt
-            )
+            ):
 
-            if full_reply:
+                full_reply += chunk
 
-                # Streaming giả lập từng đoạn nhỏ
-                # để frontend hiện câu trả lời mượt hơn.
+                yield chunk
 
-                words = full_reply.split(" ")
+            # Nếu AI không trả được gì
+            if not full_reply.strip():
 
-                current_text = ""
+                fallback = (
+                    "Xin lỗi, MindCare chưa nhận được "
+                    "phản hồi từ AI. Bạn thử gửi lại "
+                    "sau một chút nhé 💚"
+                )
 
-                for index, word in enumerate(words):
+                yield fallback
 
-                    if index == 0:
-                        current_text = word
-                    else:
-                        current_text += " " + word
+                full_reply = fallback
 
-                    yield (
-                        word
-                        if index == 0
-                        else " " + word
-                    )
+            # Lưu lịch sử sau khi hoàn thành
+            if current_user.is_authenticated:
 
-                    # Không delay quá nhiều
-                    time.sleep(0.01)
-
-                # Lưu lịch sử
-                if current_user.is_authenticated:
+                try:
 
                     conn = get_db()
 
@@ -555,20 +675,19 @@ def chat():
                         (
                             current_user.id,
                             message,
-                            full_reply
+                            full_reply.strip()
                         )
                     )
 
                     conn.commit()
                     conn.close()
 
-                return
+                except Exception as db_error:
 
-            # Gemini không trả được câu trả lời
-            yield (
-                "Xin lỗi, MindCare đang tạm thời không thể "
-                "kết nối với AI. Bạn chờ một chút rồi thử lại nhé 💚"
-            )
+                    print(
+                        "CHAT HISTORY ERROR:",
+                        db_error
+                    )
 
         except Exception as e:
 
@@ -577,14 +696,22 @@ def chat():
                 e
             )
 
-            yield (
-                "Xin lỗi, MindCare đang gặp sự cố "
-                "khi xử lý tin nhắn. Bạn thử lại nhé 💚"
+            error_message = (
+                "MindCare đang gặp một chút vấn đề "
+                "khi kết nối với AI. Bạn thử lại nhé 💚"
             )
 
+            yield error_message
+
     return Response(
-        stream_with_context(generate()),
-        mimetype="text/plain; charset=utf-8"
+        stream_with_context(
+            generate()
+        ),
+        mimetype="text/plain; charset=utf-8",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
     )
 
 
@@ -622,7 +749,10 @@ def save_mood():
         conn.execute(
             """
             INSERT INTO mood_checkins
-            (user_id, mood)
+            (
+                user_id,
+                mood
+            )
             VALUES (?, ?)
             """,
             (
@@ -672,7 +802,9 @@ def get_moods():
         ORDER BY id DESC
         LIMIT 30
         """,
-        (current_user.id,)
+        (
+            current_user.id,
+        )
     ).fetchall()
 
     conn.close()
@@ -707,7 +839,9 @@ def get_journals():
         WHERE user_id = ?
         ORDER BY id DESC
         """,
-        (current_user.id,)
+        (
+            current_user.id,
+        )
     ).fetchall()
 
     conn.close()
@@ -809,7 +943,9 @@ def save_journal():
     methods=["DELETE"]
 )
 @login_required
-def delete_journal(journal_id):
+def delete_journal(
+    journal_id
+):
 
     conn = get_db()
 
@@ -849,7 +985,9 @@ def get_stats():
         FROM mood_checkins
         WHERE user_id = ?
         """,
-        (current_user.id,)
+        (
+            current_user.id,
+        )
     ).fetchone()[0]
 
     total_journals = conn.execute(
@@ -858,7 +996,9 @@ def get_stats():
         FROM journals
         WHERE user_id = ?
         """,
-        (current_user.id,)
+        (
+            current_user.id,
+        )
     ).fetchone()[0]
 
     total_chats = conn.execute(
@@ -867,7 +1007,9 @@ def get_stats():
         FROM chat_history
         WHERE user_id = ?
         """,
-        (current_user.id,)
+        (
+            current_user.id,
+        )
     ).fetchone()[0]
 
     conn.close()
@@ -900,7 +1042,9 @@ def get_history():
         ORDER BY id DESC
         LIMIT 50
         """,
-        (current_user.id,)
+        (
+            current_user.id,
+        )
     ).fetchall()
 
     conn.close()
@@ -914,15 +1058,19 @@ def get_history():
 
 
 # ============================================================
-# RUN
+# RUN LOCAL
 # ============================================================
 
 if __name__ == "__main__":
 
     print("=" * 60)
-    print("        MINDCARE - AI MENTAL HEALTH")
+    print("       MINDCARE - AI MENTAL HEALTH")
     print("=" * 60)
-    print("Website: http://127.0.0.1:5000")
+
+    print(
+        "Website: http://127.0.0.1:5000"
+    )
+
     print("=" * 60)
 
     app.run(
@@ -930,4 +1078,3 @@ if __name__ == "__main__":
         host="127.0.0.1",
         port=5000
     )
-```
