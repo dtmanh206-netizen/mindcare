@@ -1,3 +1,4 @@
+```python
 from flask import (
     Flask,
     render_template,
@@ -28,6 +29,7 @@ from dotenv import load_dotenv
 
 import sqlite3
 import os
+import time
 
 
 # ============================================================
@@ -48,7 +50,7 @@ DATABASE = "mindcare.db"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
-    print("WARNING: Chưa tìm thấy GEMINI_API_KEY trong file .env")
+    print("WARNING: Chưa tìm thấy GEMINI_API_KEY trong biến môi trường.")
 
 client = genai.Client(
     api_key=GEMINI_API_KEY
@@ -367,28 +369,12 @@ def get_current_user():
 
 
 # ============================================================
-# CHAT AI - STREAMING
+# AI PROMPT
 # ============================================================
 
-@app.route("/chat", methods=["POST"])
-def chat():
+def build_mindcare_prompt(message):
 
-    data = request.get_json(
-        silent=True
-    ) or {}
-
-    message = data.get(
-        "message",
-        ""
-    ).strip()
-
-    if not message:
-
-        return jsonify({
-            "reply": "Bạn hãy chia sẻ điều bạn đang cảm thấy nhé 💚"
-        })
-
-    prompt = f"""
+    return f"""
 Bạn là MindCare – một trợ lý AI hỗ trợ sức khỏe tinh thần
 dành cho sinh viên Việt Nam.
 
@@ -421,58 +407,168 @@ Tin nhắn của người dùng:
 {message}
 """
 
-    def generate():
 
-        full_reply = ""
+# ============================================================
+# GEMINI AI
+# ============================================================
+
+def generate_ai_response(prompt):
+
+    """
+    Gọi Gemini với cơ chế retry cho các lỗi tạm thời
+    như 503 / 429 / 500.
+    """
+
+    max_attempts = 3
+
+    for attempt in range(max_attempts):
 
         try:
 
-            response = client.models.generate_content_stream(
+            response = client.models.generate_content(
                 model="gemini-3.5-flash",
                 contents=prompt
             )
 
-            for chunk in response:
+            text = getattr(
+                response,
+                "text",
+                None
+            )
 
-                text = getattr(
-                    chunk,
-                    "text",
-                    None
+            if text:
+                return text.strip()
+
+            return ""
+
+        except Exception as e:
+
+            error_text = str(e)
+
+            print(
+                f"GEMINI ERROR - attempt {attempt + 1}/{max_attempts}:",
+                error_text
+            )
+
+            # Các lỗi có khả năng thử lại
+            retryable = any(
+                code in error_text
+                for code in [
+                    "503",
+                    "UNAVAILABLE",
+                    "429",
+                    "RESOURCE_EXHAUSTED",
+                    "500",
+                    "INTERNAL"
+                ]
+            )
+
+            if not retryable:
+                break
+
+            if attempt < max_attempts - 1:
+
+                # 2 giây -> 4 giây
+                wait_time = 2 ** (attempt + 1)
+
+                print(
+                    f"Gemini đang bận. Thử lại sau {wait_time} giây..."
                 )
 
-                if text:
+                time.sleep(wait_time)
 
-                    full_reply += text
+    return None
 
-                    yield text
 
-            # Lưu lịch sử
-            if (
-                current_user.is_authenticated
-                and full_reply
-            ):
+# ============================================================
+# CHAT AI
+# ============================================================
 
-                conn = get_db()
+@app.route("/chat", methods=["POST"])
+def chat():
 
-                conn.execute(
-                    """
-                    INSERT INTO chat_history
-                    (
-                        user_id,
-                        message,
-                        reply
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    message = data.get(
+        "message",
+        ""
+    ).strip()
+
+    if not message:
+
+        return jsonify({
+            "reply": "Bạn hãy chia sẻ điều bạn đang cảm thấy nhé 💚"
+        })
+
+    prompt = build_mindcare_prompt(message)
+
+    def generate():
+
+        try:
+
+            full_reply = generate_ai_response(
+                prompt
+            )
+
+            if full_reply:
+
+                # Streaming giả lập từng đoạn nhỏ
+                # để frontend hiện câu trả lời mượt hơn.
+
+                words = full_reply.split(" ")
+
+                current_text = ""
+
+                for index, word in enumerate(words):
+
+                    if index == 0:
+                        current_text = word
+                    else:
+                        current_text += " " + word
+
+                    yield (
+                        word
+                        if index == 0
+                        else " " + word
                     )
-                    VALUES (?, ?, ?)
-                    """,
-                    (
-                        current_user.id,
-                        message,
-                        full_reply
-                    )
-                )
 
-                conn.commit()
-                conn.close()
+                    # Không delay quá nhiều
+                    time.sleep(0.01)
+
+                # Lưu lịch sử
+                if current_user.is_authenticated:
+
+                    conn = get_db()
+
+                    conn.execute(
+                        """
+                        INSERT INTO chat_history
+                        (
+                            user_id,
+                            message,
+                            reply
+                        )
+                        VALUES (?, ?, ?)
+                        """,
+                        (
+                            current_user.id,
+                            message,
+                            full_reply
+                        )
+                    )
+
+                    conn.commit()
+                    conn.close()
+
+                return
+
+            # Gemini không trả được câu trả lời
+            yield (
+                "Xin lỗi, MindCare đang tạm thời không thể "
+                "kết nối với AI. Bạn chờ một chút rồi thử lại nhé 💚"
+            )
 
         except Exception as e:
 
@@ -483,7 +579,7 @@ Tin nhắn của người dùng:
 
             yield (
                 "Xin lỗi, MindCare đang gặp sự cố "
-                "khi kết nối với AI. Bạn thử lại nhé 💚"
+                "khi xử lý tin nhắn. Bạn thử lại nhé 💚"
             )
 
     return Response(
@@ -834,3 +930,4 @@ if __name__ == "__main__":
         host="127.0.0.1",
         port=5000
     )
+```
